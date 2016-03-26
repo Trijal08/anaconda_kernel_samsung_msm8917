@@ -162,6 +162,7 @@ struct dentry_operations {
 	int (*d_manage)(struct dentry *, bool);
 	void (*d_canonical_path)(const struct path *, struct path *);
 	struct inode *(*d_select_inode)(struct dentry *, unsigned);
+	struct dentry *(*d_real)(struct dentry *, struct inode *);
 } ____cacheline_aligned;
 
 /*
@@ -220,14 +221,17 @@ struct dentry_operations {
 #define DCACHE_MISS_TYPE		0x00000000 /* Negative dentry */
 #define DCACHE_DIRECTORY_TYPE		0x00100000 /* Normal directory */
 #define DCACHE_AUTODIR_TYPE		0x00200000 /* Lookupless directory (presumed automount) */
+#define DCACHE_REGULAR_TYPE		0x00400000 /* Regular file type (or fallthru to such) */
+#define DCACHE_SPECIAL_TYPE		0x00500000 /* Other file type (or fallthru to such) */
 #define DCACHE_SYMLINK_TYPE		0x00300000 /* Symlink */
 #define DCACHE_FILE_TYPE		0x00400000 /* Other file type */
 
 #define DCACHE_MAY_FREE			0x00800000
 #define DCACHE_OP_SELECT_INODE		0x02000000 /* Unioned entry: dcache op selects inode */
-#define DCACHE_WILL_INVALIDATE		0x80000000 /* will be invalidated */
+#define DCACHE_OP_REAL			0x08000000
 
 #define DCACHE_ENCRYPTED_WITH_KEY	0x04000000 /* dir is encrypted with a valid key */
+#define DCACHE_WILL_INVALIDATE		0x80000000 /* will be invalidated */
 
 extern seqlock_t rename_lock;
 
@@ -530,6 +534,14 @@ static inline struct inode *d_backing_inode(const struct dentry *upper)
 static inline struct dentry *d_backing_dentry(struct dentry *upper)
 {
 	return upper;
+}
+
+static inline struct dentry *d_real(struct dentry *dentry)
+{
+	if (unlikely(dentry->d_flags & DCACHE_OP_REAL))
+		return dentry->d_op->d_real(dentry, NULL);
+	else
+		return dentry;
 }
 
 struct name_snapshot {
