@@ -544,6 +544,18 @@ static inline struct dentry *d_real(struct dentry *dentry)
 		return dentry;
 }
 
+/**
+ * d_real_inode - Return the real inode
+ * @dentry: The dentry to query
+ *
+ * If dentry is on an union/overlay, then return the underlying, real inode.
+ * Otherwise return d_inode().
+ */
+static inline struct inode *d_real_inode(struct dentry *dentry)
+{
+	return d_backing_inode(d_real(dentry));
+}
+
 struct name_snapshot {
 	const char *name;
 	char inline_name[DNAME_INLINE_LEN];
