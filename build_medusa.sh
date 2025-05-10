@@ -14,17 +14,9 @@ BUILD_START=$(date +"%s")
 export ARCH=arm
 export SUBARCH=arm
 
-# Set kernel name and defconfig
-# export VERSION=
+# Set kernel defconfig
 DEF=j4corelte_defconfig
 export DEFCONFIG=$DEF
-
-# Keep it as is
-export LOCALVERSION=$VERSION
-
-# Export Username and machine name
-export KBUILD_BUILD_USER=Batu33TR
-export KBUILD_BUILD_HOST=ProjectMedusa
 
 # Color definition
 red=`tput setaf 1`
@@ -37,8 +29,9 @@ white=`tput setaf 7`
 reset=`tput sgr0`
 
 # Cross-compiler exporting
-	# Export ARM from the given directory
-	export CROSS_COMPILE=$(pwd)/gcc/bin/arm-linux-androideabi-
+# Export ARM from the given directory
+CROSS_COMPILE=$(pwd)/gcc/bin/arm-linux-androideabi-
+CC=$CROSS_COMPILE\gcc
 
 echo -e "*****************************************************"
 echo    "            Compiling kernel using GCC               "
@@ -60,7 +53,7 @@ cd $KERNEL_DIR
 rm -rf out
 
 # Make your device device_defconfig
-make O=$OUT_DIR ARCH=$ARCH KCFLAGS=-mno-android $DEFCONFIG
+make O=$OUT_DIR ARCH=$ARCH CC=$CC CROSS_COMPILE=$CROSS_COMPILE KCFLAGS=-mno-android $DEFCONFIG
 DEFCONFIG_SUCCESS=$?
 if [ $DEFCONFIG_SUCCESS != 0 ]
 	then
@@ -69,7 +62,7 @@ if [ $DEFCONFIG_SUCCESS != 0 ]
 fi
 
 # Build Kernel
-make O=$OUT_DIR ARCH=$ARCH KCFLAGS=-mno-android -j$(nproc --all)
+make O=$OUT_DIR ARCH=$ARCH CC=$CC CROSS_COMPILE=$CROSS_COMPILE KCFLAGS=-mno-android -j$(nproc --all)
 
 # Find how much build has been long
 BUILD_END=$(date +"%s")
